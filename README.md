@@ -1,2 +1,2 @@
-# SQL-Data-Warehouse
-SQL Server data warehouse to demonstrate the usage of various data sources, ETL processes, and data modeling
+# SQL Data Warehouse
+This project is focused on demonstrating the working with various file formats (CSV, JSON, API, DB) from different systems and building a data warehouse using ETL pipelines following the Medallion architecture to facilitate the effective Business Intelligence reporting.
