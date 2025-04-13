@@ -127,7 +127,7 @@ IF OBJECT_ID('bronze.erp_Category', 'U') IS NOT NULL
 GO
 
 CREATE TABLE bronze.erp_Category (                        /* Category Table */
-    erp_CategoryKey INT PRIMARY KEY,
+    erp_CategoryKey INT,
     erp_CategoryName NVARCHAR(50),
     erp_CategoryManager NVARCHAR(50),
     erp_CategoryType NVARCHAR(50),
