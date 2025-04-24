@@ -22,7 +22,10 @@ CREATE TABLE bronze.crm_Customers (                      /* Customers Table */
     cst_ZipCode NVARCHAR(20),
     cst_Country NVARCHAR(50),
     cst_Continent NVARCHAR(50),
-    cst_Birthday DATE
+    cst_Birthday DATE,
+    cst_StartDate DATE,
+    cst_EndDate DATE,
+    cst_IsActive INT
 );
 GO
 
@@ -40,6 +43,7 @@ CREATE TABLE bronze.pos_Sales (                              /* Sales Table */
     sales_ProductKey INT,
     sales_Quantity INT,
     sales_CurrencyCode NVARCHAR(10),
+    sales_RowKey NVARCHAR(15)
 );
 GO
 
