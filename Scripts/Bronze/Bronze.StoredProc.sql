@@ -1,166 +1,188 @@
-
-
-/* Products Table Bulk Insert */
-TRUNCATE TABLE DataWarehouse.bronze.erp_Products;
-BULK INSERT 
-	DataWarehouse.bronze.erp_Products
-	FROM 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Products.csv'
-
-	WITH(	ROWTERMINATOR = '\n',
-			FIRSTROW = 2,
-			FIELDTERMINATOR = ',',
-			FORMAT = 'CSV',
-			CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
-			ERRORFILE = 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Products',	
-												/* Save the Error rows in this file - Catch Errors */
-			TABLOCK								/* Lock the table during this operation */
-		);
-
---select * from bronze.erp_Products;
-
-
-
-/* Exchange Rates Table Bulk Insert */
-TRUNCATE TABLE DataWarehouse.bronze.fin_ExchangeRates;
-BULK INSERT 
-	DataWarehouse.bronze.fin_ExchangeRates
-	FROM 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\ExchangeRates.csv'
-
-	WITH(	ROWTERMINATOR = '\n',
-			FIRSTROW = 2,
-			FIELDTERMINATOR = ',',
-			FORMAT = 'CSV',
-			CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
-			ERRORFILE = 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\ExchangeRates',	
-												/* Save the Error rows in this file - Catch Errors */
-			TABLOCK								/* Lock the table during this operation */
-		);
-
---select * from bronze.fin_ExchangeRates;
-
-
-/*BULK INSERT pos_Stores
-	FROM 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Stores.csv'
-
-	WITH(	ROWTERMINATOR = '\n',
-			FIRSTROW = 2,
-			FIELDTERMINATOR = ',',
-			FORMAT = 'CSV',
-			CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
-			ERRORFILE = 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Stores',	/* Save the Error rows in this file - Catch Errors */
-			KEEPNULLS,							/* Keep Null values */
-			TABLOCK								/* Lock the table during this operation */
-		);  ------------ COPY from other database*/
-
-/* Stores Table - Copy of a relation */
-
-BEGIN TRY
-    BEGIN TRANSACTION;
-
-    DECLARE @rowcount_before INT = (SELECT COUNT(*) FROM DataWarehouse.bronze.pos_Stores);
-    
-    TRUNCATE TABLE DataWarehouse.bronze.pos_Stores;
-
-    INSERT INTO DataWarehouse.bronze.pos_Stores
-    SELECT * FROM Practicedb.dbo.pos_Stores;
-
-    DECLARE @rowcount_after INT = (SELECT COUNT(*) FROM DataWarehouse.bronze.pos_Stores);
-
-    PRINT 'Rows before: ' + CAST(@rowcount_before AS VARCHAR);
-    PRINT 'Rows after: ' + CAST(@rowcount_after AS VARCHAR);
-
-    COMMIT TRANSACTION;
-END TRY
-BEGIN CATCH
-    ROLLBACK TRANSACTION;
-    PRINT 'Error: ' + ERROR_MESSAGE();
-END CATCH;
-
-
---select * from DataWarehouse.bronze.pos_Stores;
-
-
-alter table bronze.crm_Customers alter column cst_StateCode NVARCHAR(50)
-
-/* Customers Table Bulk Insert */
-TRUNCATE TABLE DataWarehouse.bronze.crm_Customers;
-BULK INSERT 
-	DataWarehouse.bronze.crm_Customers
-	FROM 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Customers.csv'
-
-	WITH(	ROWTERMINATOR = '\n',
-			FIRSTROW = 2,
-			FIELDTERMINATOR = ',',
-			FORMAT = 'CSV',
-			CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
-			ERRORFILE = 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Customers',	
-			KEEPNULLS,									/* Save the Error rows in this file - Catch Errors */
-			TABLOCK								/* Lock the table during this operation */
-		);
-
---select * from bronze.crm_Customers;
-
-Declare @JSON varchar(max)
-SELECT @JSON=BulkColumn
-FROM OPENROWSET (BULK 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Category.json', SINGLE_CLOB) import
-If (ISJSON(@JSON)=1)
-Print 'It is a valid JSON'				/* Check if the file is a valid JSON */
-ELSE
-Print 'Error in JSON format'
-
-
 /*
-Declare @JSON varchar(max)				/* Transform to Key-Value Pairs */
-SELECT @JSON=BulkColumn
-FROM OPENROWSET (BULK 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Category.json', SINGLE_CLOB) import
-SELECT *
-FROM OPENJSON (@JSON)
+**************Bronze Stored Procedures: Bulk Load & Insert Data****************
+Script Purpose:
+    This script performs bulk load data from raw sources, upon truncate existing tables.
+	
+    Run this script to load the data to bronze tables
+
+    This file has 3 stored procedures:
+
+    1. bronze.load_bulkData -----> This creats a stored prcedure which performs bulk insert on 5 tables from various sources
+    2. bronze.InsertSubcategory -----> This procedure helps in inserting the data in SubCategory table
+    3. bronze.sp_InsertCustomer -----> This procedure helps in inserting the data in Customer table during implementation of Slowly Changing Dimensions
+===============================================================================
 */
 
 
-/* Category Table Bulk Insert */
+CREATE OR ALTER PROCEDURE bronze.load_bulkData AS
+BEGIN
 
-TRUNCATE TABLE DataWarehouse.bronze.erp_Category;
+    DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME;
 
-DECLARE @json NVARCHAR(MAX);
-SELECT @json = BulkColumn						/* Import entire JSON file as a string */
-FROM OPENROWSET (
-    BULK 'C:\Users\gnani\Downloads\DWH_Gpt\Global_Electronics_Retailer\Category.json',
-    SINGLE_CLOB
-) AS [import];
+    BEGIN TRY
+        /* Products Table Bulk Insert */
+        SET @batch_start_time = GETDATE();
+        SET @start_time = GETDATE();
+        PRINT '>> Truncating Table: bronze.erp_Products';
+            TRUNCATE TABLE DataWarehouse.bronze.erp_Products;
+        PRINT '>> Bulk Load into Table: bronze.erp_Products';    
+            BULK INSERT 
+                DataWarehouse.bronze.erp_Products
+                FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Products.csv'
 
--- Insert with proper JSON key mappings
-INSERT INTO DataWarehouse.bronze.erp_Category (
-    erp_CategoryKey,
-    erp_CategoryName,
-    erp_CategoryManager,
-    erp_CategoryType,
-    erp_IsSeasonal,
-    erp_LaunchYear,
-    erp_CategoryStatus,
-    erp_CreatedDate,
-    erp_UpdatedDate
-)
-SELECT *
-FROM OPENJSON(@json)									/* Json output from a string to Tabular format */
-WITH (
-    erp_CategoryKey INT              '$."cat key"',					/* cat Key ---> Name in JSON */
-    erp_CategoryName NVARCHAR(50)    '$."cat"',
-    erp_CategoryManager NVARCHAR(50) '$."mgr"',
-    erp_CategoryType NVARCHAR(50)    '$."cat type"',
-    erp_IsSeasonal NVARCHAR(10)      '$."seasonal"',
-    erp_LaunchYear INT               '$."Launched"',
-    erp_CategoryStatus NVARCHAR(20)  '$."CategoryStatus"',
-    erp_CreatedDate DATETIME         '$."Created"',
-    erp_UpdatedDate DATETIME         '$."Updated"'
-);
+                WITH(	ROWTERMINATOR = '\n',
+                        FIRSTROW = 2,
+                        FIELDTERMINATOR = ',',
+                        FORMAT = 'CSV',
+                        CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
+                        ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Products',	
+                                                            /* Save the Error rows in this file - Catch Errors */
+                        TABLOCK								/* Lock the table during this operation */
+                    );
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '>> ------------------------------';
+
+        /* Exchange Rates Table Bulk Insert */
+        
+        SET @start_time = GETDATE();
+        PRINT '>> Truncating Table: bronze.fin_ExchangeRates';
+        TRUNCATE TABLE DataWarehouse.bronze.fin_ExchangeRates;
+        PRINT '>> Bulk Load into Table: bronze.fin_ExchangeRates';
+            BULK INSERT 
+                DataWarehouse.bronze.fin_ExchangeRates
+                FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\ExchangeRates.csv'
+                WITH(	ROWTERMINATOR = '\n',
+                        FIRSTROW = 2,
+                        FIELDTERMINATOR = ',',
+                        FORMAT = 'CSV',
+                        CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
+                        ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\ExchangeRates',	
+                                                            /* Save the Error rows in this file - Catch Errors */
+                        TABLOCK								/* Lock the table during this operation */
+                    );
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '>> ------------------------------';
+
+        
+        
+        /* Bulk Load Stores Table to the another database. Then, we copy  this table to the bronze layer */
+        BULK INSERT pos_Stores
+            FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Stores.csv'
+
+            WITH(	ROWTERMINATOR = '\n',
+                    FIRSTROW = 2,
+                    FIELDTERMINATOR = ',',
+                    FORMAT = 'CSV',
+                    CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
+                    ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Stores',	/* Save the Error rows in this file - Catch Errors */
+                    KEEPNULLS,							/* Keep Null values */
+                    TABLOCK								/* Lock the table during this operation */
+                );                                      ------------ Using this to COPY from other database
+
+        /* Stores Table - Copy of a relation from the database to the bronze layer of Data Warehouse */
+
+        BEGIN TRY
+            BEGIN TRANSACTION;
+        PRINT '>> Truncating Table: bronze.pos_Stores';
+            DECLARE @rowcount_before INT = (SELECT COUNT(*) FROM DataWarehouse.bronze.pos_Stores);
+            TRUNCATE TABLE DataWarehouse.bronze.pos_Stores;
+        PRINT '>> Copy Table to Bronze Layer: bronze.pos_Stores';
+            INSERT INTO DataWarehouse.bronze.pos_Stores
+            SELECT * FROM Practicedb.dbo.pos_Stores;
+            DECLARE @rowcount_after INT = (SELECT COUNT(*) FROM DataWarehouse.bronze.pos_Stores);
+            PRINT 'Rows before: ' + CAST(@rowcount_before AS VARCHAR);
+            PRINT 'Rows after: ' + CAST(@rowcount_after AS VARCHAR);
+            COMMIT TRANSACTION;
+        END TRY
+        BEGIN CATCH
+            ROLLBACK TRANSACTION;
+            PRINT 'Error: ' + ERROR_MESSAGE();
+        END CATCH;
 
 
---select * from bronze.erp_Category;
 
+        /* Customers Table Bulk Insert */
+        
+        SET @start_time = GETDATE();
+        PRINT '>> Truncating Table: bronze.crm_Customers';
+            TRUNCATE TABLE DataWarehouse.bronze.crm_Customers;
+        PRINT '>> Bulk Load into Table: bronze.crm_Customers';
+            BULK INSERT 
+                DataWarehouse.bronze.crm_Customers
+                FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Customers.csv'
 
+                WITH(	ROWTERMINATOR = '\n',
+                        FIRSTROW = 2,
+                        FIELDTERMINATOR = ',',
+                        FORMAT = 'CSV',
+                        CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
+                        ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Customers',	
+                        KEEPNULLS,									/* Save the Error rows in this file - Catch Errors */
+                        TABLOCK								/* Lock the table during this operation */
+                    );
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '>> ------------------------------';
+        
+        
+        /* Category Table Bulk Insert */
+        SET @start_time = GETDATE();
+        PRINT '>> Truncating Table: bronze.erp_Category';
+            TRUNCATE TABLE DataWarehouse.bronze.erp_Category;
+            PRINT '>> Bulk Load into Table: bronze.erp_Category';
+            DECLARE @json NVARCHAR(MAX);
+            SELECT @json = BulkColumn						/* Import entire JSON file as a string */
+            FROM OPENROWSET (
+                BULK 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Category.json',
+                SINGLE_CLOB
+            ) AS [import];
 
-select * from bronze.erp_SubCategory;
+            -- Insert with proper JSON key mappings
+            INSERT INTO DataWarehouse.bronze.erp_Category (
+                erp_CategoryKey,
+                erp_CategoryName,
+                erp_CategoryManager,
+                erp_CategoryType,
+                erp_IsSeasonal,
+                erp_LaunchYear,
+                erp_CategoryStatus,
+                erp_CreatedDate,
+                erp_UpdatedDate
+            )
+            SELECT *
+            FROM OPENJSON(@json)									/* Json output from a string to Tabular format */
+            WITH (
+                erp_CategoryKey INT              '$."cat key"',					/* cat Key ---> Name in JSON */
+                erp_CategoryName NVARCHAR(50)    '$."cat"',
+                erp_CategoryManager NVARCHAR(50) '$."mgr"',
+                erp_CategoryType NVARCHAR(50)    '$."cat type"',
+                erp_IsSeasonal NVARCHAR(10)      '$."seasonal"',
+                erp_LaunchYear INT               '$."Launched"',
+                erp_CategoryStatus NVARCHAR(20)  '$."CategoryStatus"',
+                erp_CreatedDate DATETIME         '$."Created"',
+                erp_UpdatedDate DATETIME         '$."Updated"'
+            );
+        SET @end_time = GETDATE();
+        PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+        PRINT '>> ------------------------------';
+
+        SET @batch_end_time = GETDATE();
+        PRINT '=========================================='
+        PRINT 'Loading Bronze Layer is Completed';
+        PRINT '   - Total Load Duration: ' + CAST(DATEDIFF(SECOND, @batch_start_time, @batch_end_time) AS NVARCHAR) + ' seconds';
+        PRINT '=========================================='
+    END TRY
+	BEGIN CATCH
+		PRINT '=========================================='
+		PRINT 'ERROR OCCURED DURING LOADING BRONZE LAYER'
+		PRINT 'Error Message' + ERROR_MESSAGE();
+		PRINT 'Error Message' + CAST (ERROR_NUMBER() AS NVARCHAR);
+		PRINT 'Error Message' + CAST (ERROR_STATE() AS NVARCHAR);
+		PRINT '=========================================='
+	END CATCH
+END
 
 /* SubCategory Table Insert Procedure */
 
@@ -189,21 +211,31 @@ BEGIN
     )
 END
 
-select * from bronze.erp_SubCategory;
 
-select * from bronze.fin_CurrencyData;
+/* Stored procedure to insert the customers */
 
-alter table bronze.fin_CurrencyData alter column fin_CurrencySymbol NVARCHAR(10)
-
-
-/* Sales Table Insert Procedure */
-alter table bronze.pos_Sales add [sales_RowKey] NVARCHAR(15)
-
-select max([sales_OrderNumber]), max(sales_RowKey) from bronze.pos_Sales;
-
-
-select * from bronze.pos_Sales where sales_OrderNumber > 2243000;
-
-/*truncate table bronze.pos_Sales;*/
-
-select * from bronze.crm_Customers;
+CREATE PROCEDURE bronze.sp_InsertCustomer
+    @CustomerKey INT,
+    @Gender NVARCHAR(50),
+    @Name NVARCHAR(50),
+    @City NVARCHAR(50),
+    @StateCode NVARCHAR(10),
+    @State NVARCHAR(50),
+    @ZipCode NVARCHAR(10),
+    @Country NVARCHAR(50),
+    @Continent NVARCHAR(50),
+    @Birthday DATE,
+    @StartDate DATE,
+    @EndDate DATE,
+    @IsActive INT
+AS
+BEGIN
+    INSERT INTO bronze.crm_Customers (
+        cst_CustomerKey, cst_Gender, cst_Name, cst_City, cst_StateCode, cst_State,
+        cst_ZipCode, cst_Country, cst_Continent, cst_Birthday, cst_StartDate, cst_EndDate, cst_IsActive
+    )
+    VALUES (
+        @CustomerKey, @Gender, @Name, @City, @StateCode, @State,
+        @ZipCode, @Country, @Continent, @Birthday, @StartDate, @EndDate, @IsActive
+    );
+END;
