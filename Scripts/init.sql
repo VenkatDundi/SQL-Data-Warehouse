@@ -22,3 +22,6 @@ GO
 
 CREATE SCHEMA gold;
 GO
+
+CREATE SCHEMA quarantine;
+GO
