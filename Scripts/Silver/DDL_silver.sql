@@ -9,7 +9,6 @@ Script Purpose:
     We have added a meta data column: dwh_createDate to identify the timestamps of silver table creation
 ===============================================================================
 */
-
 IF OBJECT_ID('silver.crm_Customers', 'U') IS NOT NULL   
     DROP TABLE silver.crm_Customers;
 GO
@@ -19,7 +18,7 @@ CREATE TABLE silver.crm_Customers (                      /* Customers Table */
     cst_Gender NVARCHAR(50),
     cst_Name NVARCHAR(50),
     cst_City NVARCHAR(50),
-    cst_StateCode NVARCHAR(10),
+    cst_StateCode NVARCHAR(50),
     cst_State NVARCHAR(50),
     cst_ZipCode NVARCHAR(20),
     cst_Country NVARCHAR(50),
@@ -31,6 +30,7 @@ CREATE TABLE silver.crm_Customers (                      /* Customers Table */
     dwh_createDate DATETIME2 default GETDATE()
 );
 GO
+
 
 IF OBJECT_ID('silver.pos_Sales', 'U') IS NOT NULL              
     DROP TABLE silver.pos_Sales;
