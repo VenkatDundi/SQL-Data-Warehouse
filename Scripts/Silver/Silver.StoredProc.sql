@@ -198,7 +198,6 @@ BEGIN
 				WHERE 
 					TRY_CAST(REPLACE(REPLACE(erp_UnitCostUSD, '$', ''), ',', '') AS DECIMAL(10,2)) IS NULL;
 
-
 			/* Insert SubCategory table */
 
 			SET @start_time = GETDATE();

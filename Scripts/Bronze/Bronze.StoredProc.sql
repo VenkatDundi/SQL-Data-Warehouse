@@ -115,7 +115,7 @@ BEGIN
 
                 WITH(	ROWTERMINATOR = '\n',
                         FIRSTROW = 2,
-                        FIELDTERMINATOR = ',',
+                        FIELDTERMINATOR = ',',	/* CODEPAGE='1252' to be used for encoding German chars */
                         FORMAT = 'CSV',
                         CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
                         ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Customers',	
