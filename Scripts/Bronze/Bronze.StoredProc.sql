@@ -101,8 +101,7 @@ BEGIN
             PRINT 'Error: ' + ERROR_MESSAGE();
         END CATCH;
 
-
-
+select * from bronze.crm_Customers
         /* Customers Table Bulk Insert */
         
         SET @start_time = GETDATE();
@@ -113,11 +112,12 @@ BEGIN
                 DataWarehouse.bronze.crm_Customers
                 FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Customers.csv'
 
-                WITH(	ROWTERMINATOR = '\n',
+                WITH(	
+						ROWTERMINATOR = '\n',
                         FIRSTROW = 2,
-                        FIELDTERMINATOR = ',',	/* CODEPAGE='1252' to be used for encoding German chars */
-                        FORMAT = 'CSV',
-                        CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
+                        FIELDTERMINATOR = ',',
+						FORMAT = 'CSV',
+                        CODEPAGE = '1252',					/* To keep the formatting of encoding - Special characters */ 
                         ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Customers',	
                         KEEPNULLS,									/* Save the Error rows in this file - Catch Errors */
                         TABLOCK								/* Lock the table during this operation */

@@ -8,6 +8,8 @@ Script Purpose:
 ===============================================================================
 */
 
+select * from bronze.crm_Customers;
+
 IF OBJECT_ID('bronze.crm_Customers', 'U') IS NOT NULL   
     DROP TABLE bronze.crm_Customers;
 GO
