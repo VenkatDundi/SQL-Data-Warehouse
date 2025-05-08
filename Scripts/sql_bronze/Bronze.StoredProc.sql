@@ -7,79 +7,133 @@ Script Purpose:
 
     This file has 3 stored procedures:
 
-    1. bronze.load_bulkData -----> This creats a stored prcedure which performs bulk insert on 5 tables from various sources
+    1. bronze.load_bulkData -----> This creates a stored procedure which performs bulk insert on 5 tables from various sources
     2. bronze.InsertSubcategory -----> This procedure helps in inserting the data in SubCategory table
     3. bronze.sp_InsertCustomer -----> This procedure helps in inserting the data in Customer table during implementation of Slowly Changing Dimensions
 ===============================================================================
 */
 
 
-CREATE OR ALTER PROCEDURE bronze.load_bulkData AS
+--EXEC bronze.load_bulkData @folderPath ='C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\'
+
+--drop procedure bronze.load_bulkData;
+
+CREATE OR ALTER PROCEDURE bronze.load_bulkData 
+		@folderpath NVARCHAR(500)
+AS
 BEGIN
 
     DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME;
+	DECLARE @sql NVARCHAR(MAX);
+	DECLARE @fileName NVARCHAR(100);
+	DECLARE @errorFileName NVARCHAR(100);
+
+	-- Template with placeholders
+	DECLARE @template NVARCHAR(MAX) = '
+	BULK INSERT DataWarehouse.bronze.{{table}}
+	FROM ''{{filePath}}''
+	WITH (
+		FORMAT = ''CSV'',
+		FIRSTROW = 2,
+		FIELDTERMINATOR = '','',
+		ROWTERMINATOR = ''\n'',
+		CODEPAGE = ''65001'',
+		ERRORFILE = ''{{errorFile}}'',
+		KEEPNULLS,
+		TABLOCK
+	);'
+
+	DECLARE @template_stores NVARCHAR(MAX) = '
+	BULK INSERT Practicedb.dbo.{{table}}
+	FROM ''{{filePath}}''
+	WITH (
+		FORMAT = ''CSV'',
+		FIRSTROW = 2,
+		FIELDTERMINATOR = '','',
+		ROWTERMINATOR = ''\n'',
+		CODEPAGE = ''65001'',
+		ERRORFILE = ''{{errorFile}}'',
+		KEEPNULLS,
+		TABLOCK
+	);'
+
+	DECLARE @template_customers NVARCHAR(MAX) = '
+	BULK INSERT DataWarehouse.bronze.{{table}}
+	FROM ''{{filePath}}''
+	WITH (
+		FORMAT = ''CSV'',
+		FIRSTROW = 2,
+		FIELDTERMINATOR = '','',
+		ROWTERMINATOR = ''\n'',
+		CODEPAGE = ''1252'',
+		ERRORFILE = ''{{errorFile}}'',
+		KEEPNULLS,
+		TABLOCK
+	);'
+
+
+
+	-- CODEPAGE : /* To keep the formatting of encoding - Special characters */
+	-- ERRORFILE : /* Save the Error rows in this file - Catch Errors */
+	-- TABLOCK : /* Lock the table during this operation */
+	-- KEEPNULLS : /* Keep Null values in records */
+	 
 
     BEGIN TRY
         /* Products Table Bulk Insert */
+		SET @fileName = 'Products.csv'
+		SET @errorFileName = 'Products_ERROR'
         SET @batch_start_time = GETDATE();
         SET @start_time = GETDATE();
         PRINT '>> Truncating Table: bronze.erp_Products';
             TRUNCATE TABLE DataWarehouse.bronze.erp_Products;
         PRINT '>> Bulk Load into Table: bronze.erp_Products';    
-            BULK INSERT 
-                DataWarehouse.bronze.erp_Products
-                FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Products.csv'
+		
+		-- Replace placeholders
+		SET @sql = REPLACE(@template, '{{table}}', 'erp_Products')
+		SET @sql = REPLACE(@sql, '{{filePath}}', @folderPath + @fileName)
+		SET @sql = REPLACE(@sql, '{{errorFile}}', @folderPath + @errorFileName)
 
-                WITH(	ROWTERMINATOR = '\n',
-                        FIRSTROW = 2,
-                        FIELDTERMINATOR = ',',
-                        FORMAT = 'CSV',
-                        CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
-                        ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Products',	
-                                                            /* Save the Error rows in this file - Catch Errors */
-                        TABLOCK								/* Lock the table during this operation */
-                    );
+		-- Execute SQL query dynamically
+		EXEC sp_executesql @sql
+
         SET @end_time = GETDATE();
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
         PRINT '>> ------------------------------';
 
+
         /* Exchange Rates Table Bulk Insert */
-        
+		SET @fileName = 'ExchangeRates.csv'
+		SET @errorFileName = 'ExchangeRates_Error'
         SET @start_time = GETDATE();
         PRINT '>> Truncating Table: bronze.fin_ExchangeRates';
         TRUNCATE TABLE DataWarehouse.bronze.fin_ExchangeRates;
         PRINT '>> Bulk Load into Table: bronze.fin_ExchangeRates';
-            BULK INSERT 
-                DataWarehouse.bronze.fin_ExchangeRates
-                FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\ExchangeRates.csv'
-                WITH(	ROWTERMINATOR = '\n',
-                        FIRSTROW = 2,
-                        FIELDTERMINATOR = ',',
-                        FORMAT = 'CSV',
-                        CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
-                        ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\ExchangeRates',	
-                                                            /* Save the Error rows in this file - Catch Errors */
-                        TABLOCK								/* Lock the table during this operation */
-                    );
-        SET @end_time = GETDATE();
+		
+		SET @sql = REPLACE(@template, '{{table}}', 'fin_ExchangeRates')
+		SET @sql = REPLACE(@sql, '{{filePath}}', @folderPath + @fileName)
+		SET @sql = REPLACE(@sql, '{{errorFile}}', @folderPath + @errorFileName)
+        
+		EXEC sp_executesql @sql
+
+		SET @end_time = GETDATE();
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
         PRINT '>> ------------------------------';
 
         
         
-        /* Bulk Load Stores Table to the another database. Then, we copy  this table to the bronze layer */
-        BULK INSERT pos_Stores
-            FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Stores.csv'
+        /* Bulk Load Stores Table to the another database. Then, we copy  this table to the bronze layer */ 
+		SET @fileName = 'Stores.csv'
+		SET @errorFileName = 'Stores_Error'
+		PRINT '>> Truncating Table: Practicedb.dbo.pos_Stores';
+        TRUNCATE TABLE Practicedb.dbo.pos_Stores;
+        PRINT '>> Bulk Load into Table: Practicedb.dbo.pos_Stores';
 
-            WITH(	ROWTERMINATOR = '\n',
-                    FIRSTROW = 2,
-                    FIELDTERMINATOR = ',',
-                    FORMAT = 'CSV',
-                    CODEPAGE = '65001',					/* To keep the formatting of encoding - Special characters */ 
-                    ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Stores',	/* Save the Error rows in this file - Catch Errors */
-                    KEEPNULLS,							/* Keep Null values */
-                    TABLOCK								/* Lock the table during this operation */
-                );                                      ------------ Using this to COPY from other database
+		SET @sql = REPLACE(@template_stores, '{{table}}', 'pos_Stores')
+		SET @sql = REPLACE(@sql, '{{filePath}}', @folderPath + @fileName)
+		SET @sql = REPLACE(@sql, '{{errorFile}}', @folderPath + @errorFileName)
+
+		EXEC sp_executesql @sql
 
         /* Stores Table - Copy of a relation from the database to the bronze layer of Data Warehouse */
 
@@ -101,69 +155,76 @@ BEGIN
             PRINT 'Error: ' + ERROR_MESSAGE();
         END CATCH;
 
-select * from bronze.crm_Customers
+
+
         /* Customers Table Bulk Insert */
         
+		SET @fileName = 'Customers.csv'
+		SET @errorFileName = 'Customers_Error'
         SET @start_time = GETDATE();
         PRINT '>> Truncating Table: bronze.crm_Customers';
             TRUNCATE TABLE DataWarehouse.bronze.crm_Customers;
         PRINT '>> Bulk Load into Table: bronze.crm_Customers';
-            BULK INSERT 
-                DataWarehouse.bronze.crm_Customers
-                FROM 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Customers.csv'
 
-                WITH(	
-						ROWTERMINATOR = '\n',
-                        FIRSTROW = 2,
-                        FIELDTERMINATOR = ',',
-						FORMAT = 'CSV',
-                        CODEPAGE = '1252',					/* To keep the formatting of encoding - Special characters */ 
-                        ERRORFILE = 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Customers',	
-                        KEEPNULLS,									/* Save the Error rows in this file - Catch Errors */
-                        TABLOCK								/* Lock the table during this operation */
-                    );
+		SET @sql = REPLACE(@template_customers, '{{table}}', 'crm_Customers')
+		SET @sql = REPLACE(@sql, '{{filePath}}', @folderPath + @fileName)
+		SET @sql = REPLACE(@sql, '{{errorFile}}', @folderPath + @errorFileName)
+
+		EXEC sp_executesql @sql
+
         SET @end_time = GETDATE();
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
         PRINT '>> ------------------------------';
         
-        
+
+
         /* Category Table Bulk Insert */
+		
+		SET @fileName = @folderPath + 'Category.json'
         SET @start_time = GETDATE();
         PRINT '>> Truncating Table: bronze.erp_Category';
             TRUNCATE TABLE DataWarehouse.bronze.erp_Category;
-            PRINT '>> Bulk Load into Table: bronze.erp_Category';
-            DECLARE @json NVARCHAR(MAX);
-            SELECT @json = BulkColumn						/* Import entire JSON file as a string */
-            FROM OPENROWSET (
-                BULK 'C:\Users\gnani\Downloads\DWH\Global_Electronics_Retailer\Category.json',
-                SINGLE_CLOB
-            ) AS [import];
+        PRINT '>> Bulk Load into Table: bronze.erp_Category';
 
-            -- Insert with proper JSON key mappings
-            INSERT INTO DataWarehouse.bronze.erp_Category (
-                erp_CategoryKey,
-                erp_CategoryName,
-                erp_CategoryManager,
-                erp_CategoryType,
-                erp_IsSeasonal,
-                erp_LaunchYear,
-                erp_CategoryStatus,
-                erp_CreatedDate,
-                erp_UpdatedDate
-            )
-            SELECT *
-            FROM OPENJSON(@json)									/* Json output from a string to Tabular format */
-            WITH (
-                erp_CategoryKey INT              '$."cat key"',					/* cat Key ---> Name in JSON */
-                erp_CategoryName NVARCHAR(50)    '$."cat"',
-                erp_CategoryManager NVARCHAR(50) '$."mgr"',
-                erp_CategoryType NVARCHAR(50)    '$."cat type"',
-                erp_IsSeasonal NVARCHAR(10)      '$."seasonal"',
-                erp_LaunchYear INT               '$."Launched"',
-                erp_CategoryStatus NVARCHAR(20)  '$."CategoryStatus"',
-                erp_CreatedDate DATETIME         '$."Created"',
-                erp_UpdatedDate DATETIME         '$."Updated"'
-            );
+
+		SET @sql = '
+				DECLARE @json NVARCHAR(MAX);
+				-- Import entire JSON file as a string
+				SELECT @json = BulkColumn					
+				FROM OPENROWSET (
+					BULK ''' + @fileName + ''',
+					SINGLE_CLOB
+				) AS [import];
+				-- Insert with proper JSON key mappings
+				INSERT INTO DataWarehouse.bronze.erp_Category (
+					erp_CategoryKey,
+					erp_CategoryName,
+					erp_CategoryManager,
+					erp_CategoryType,
+					erp_IsSeasonal,
+					erp_LaunchYear,
+					erp_CategoryStatus,
+					erp_CreatedDate,
+					erp_UpdatedDate
+				)
+				-- Json output from a string to Tabular format
+				SELECT *
+				FROM OPENJSON(@json)
+				-- Name Mappings from the JSON file
+				WITH (
+					erp_CategoryKey INT              ''$."cat key"'',
+					erp_CategoryName NVARCHAR(50)    ''$."cat"'',
+					erp_CategoryManager NVARCHAR(50) ''$."mgr"'',
+					erp_CategoryType NVARCHAR(50)    ''$."cat type"'',
+					erp_IsSeasonal NVARCHAR(10)      ''$."seasonal"'',
+					erp_LaunchYear INT               ''$."Launched"'',
+					erp_CategoryStatus NVARCHAR(20)  ''$."CategoryStatus"'',
+					erp_CreatedDate DATETIME         ''$."Created"'',
+					erp_UpdatedDate DATETIME         ''$."Updated"''
+				);'
+
+			EXEC sp_executesql @sql;
+
         SET @end_time = GETDATE();
         PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
         PRINT '>> ------------------------------';
@@ -186,7 +247,9 @@ END
 
 /* SubCategory Table Insert Procedure */
 
-CREATE PROCEDURE bronze.InsertSubcategory
+--drop procedure bronze.sp_InsertSubcategory
+
+CREATE PROCEDURE bronze.sp_InsertSubcategory
     @erp_SubcategoryKey INT,
     @erp_Subcategory NVARCHAR(100),
     @erp_CategoryKey INT,
@@ -213,6 +276,8 @@ END
 
 
 /* Stored procedure to insert the customers */
+
+--drop procedure bronze.sp_InsertCustomer
 
 CREATE PROCEDURE bronze.sp_InsertCustomer
     @CustomerKey INT,

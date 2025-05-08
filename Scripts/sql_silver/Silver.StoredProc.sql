@@ -52,18 +52,24 @@ BEGIN
 						when lower(cst_Gender) like 'fe%' or lower(cst_Gender) like 'f%' then 'Female'
 						else 'N/A'
 					end as cst_Gender,
-					cst_Name,
-					cst_City,
+					REPLACE(
+							REPLACE(
+								CAST(cst_Name AS VARCHAR(100)) COLLATE SQL_Latin1_General_CP1253_CI_AI, '''', ''), '-', ' ')
+					as cst_Name,
+					REPLACE(
+							REPLACE(
+								CAST(cst_City AS VARCHAR(100)) COLLATE SQL_Latin1_General_CP1253_CI_AI, '''', ''), '-', ' ')
+					as cst_City,
 					case when cst_State = 'Northern Territory' then 'NT'
 						when cst_State = 'South Australia' then 'SA'
 						when cst_State = 'Victoria' then 'VIC'
 						when cst_State = 'Western Australia' then 'WA'
 						else cst_StateCode
 					end as cst_StateCode,
-					case when cst_State COLLATE Latin1_General_BIN like '%[^a-zA-Z0-9 !"#$&''()*+,-./:;<=>?@]%' then 
-						TRANSLATE(cst_State, 'øüé�', '    ')
-						else cst_State 
-					end as cst_State,
+					REPLACE(
+							REPLACE(
+								CAST(cst_State AS VARCHAR(100)) COLLATE SQL_Latin1_General_CP1253_CI_AI, '''', ''), '-', ' ')
+					as cst_State,
 					cst_ZipCode,
 					cst_Country,
 					cst_Continent,
@@ -357,7 +363,7 @@ BEGIN
 	END TRY
 	BEGIN CATCH
 		PRINT '=========================================='
-		PRINT 'ERROR OCCURED DURING LOADING BRONZE LAYER'
+		PRINT 'ERROR OCCURED DURING LOADING SILVER LAYER'
 		PRINT 'Error Message' + ERROR_MESSAGE();
 		PRINT 'Error Message' + CAST (ERROR_NUMBER() AS NVARCHAR);
 		PRINT 'Error Message' + CAST (ERROR_STATE() AS NVARCHAR);

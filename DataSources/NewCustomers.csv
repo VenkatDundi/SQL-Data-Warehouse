@@ -1,0 +1,8 @@
+CustomerKey,Gender,Name,City,State Code,State,Zip Code,Country,Continent,Birthday
+301,Female,Lilly Harding,WANDEARAH WEST,SA,South Australia,5527,Australia,Australia,7/3/1939
+200079,Male,Alexis Barlow,New Westminster,BC,British Columbia,V3L 5H1,Canada,North America,7/9/1986
+400009,Male,Sven Mahler,F�rstenberg,BH,BrandenHeins,12598,Germany,Europe,4/9/1974
+600343,Female,Natalie Beaulieu,VAULX-EN-VELIN,RA,Rh�ne-Alpes,69120,France,Europe,4/30/1954
+700308,Female,Nicoletta Angelo,Cannaught,RD,Reggio Denero,89030,Italy,Europe,12/18/1946
+1200334,Male,Micheal Boyers,Los Angeles,CA,California,90018,United States,North America,9/30/1989
+111,Male,Test NewCustomer,NEW City,NW,Sample,XYZ123,NEW Country,NEW,5/5/2000

@@ -1,0 +1,167 @@
+[
+    {
+        "cat key":1,
+        "cat":"Audio",
+        "mgr":"Avery Daniels",
+        "cat type":"Physical",
+        "seasonal":"Y",
+        "Launched":2016,
+        "CategoryStatus":"Active",
+        "Created":"2017-10-18T21:17:16.000",
+        "Updated":"2018-07-18T21:17:16.000"
+    },
+    {
+        "cat key":1,
+        "cat":"Audio",
+        "mgr":"--",
+        "cat type":null,
+        "seasonal":"Yes",
+        "Launched":1900,
+        "CategoryStatus":"No",
+        "Created":"2020-01-15T22:44:23.000",
+        "Updated":"2021-02-27T00:00:00.000"
+    },
+    {
+        "cat key":2,
+        "cat":"TV and Video",
+        "mgr":"Luna Caldwell  ",
+        "cat type":"Digital",
+        "seasonal":"No",
+        "Launched":2015,
+        "CategoryStatus":"Active",
+        "Created":"2020-12-02T10:45:16.000",
+        "Updated":"2021-02-27T00:00:00.000"
+    },
+    {
+        "cat key":3,
+        "cat":"Computers",
+        "mgr":"Julian Park",
+        "cat type":"Physical",
+        "seasonal":"Yes",
+        "Launched":2019,
+        "CategoryStatus":"Active",
+        "Created":"2020-09-03T13:20:20.000",
+        "Updated":"2021-02-10T13:20:20.000"
+    },
+    {
+        "cat key":4,
+        "cat":"Cameras and camcorders    ",
+        "mgr":"Zoe-Whitman",
+        "cat type":"Physical",
+        "seasonal":"N",
+        "Launched":2017,
+        "CategoryStatus":"Active",
+        "Created":"2020-03-21T22:40:38.000",
+        "Updated":"2021-02-27T00:00:00.000"
+    },
+    {
+        "cat key":5,
+        "cat":"Cell phones",
+        "mgr":"Noah@Jensen",
+        "cat type":"Smart Devices",
+        "seasonal":"No",
+        "Launched":2018,
+        "CategoryStatus":"Active",
+        "Created":"2017-02-18T05:22:01.000",
+        "Updated":"2019-06-16T05:22:01.000"
+    },
+    {
+        "cat key":6,
+        "cat":"Music, Movies and Audio Books",
+        "mgr":"Mia Scott",
+        "cat type":"Digital",
+        "seasonal":" No",
+        "Launched":2014,
+        "CategoryStatus":"Inactive",
+        "Created":"2020-03-20T17:54:26.000",
+        "Updated":"2021-02-27T00:00:00.000"
+    },
+    {
+        "cat key":7,
+        "cat":"Games and Toys",
+        "mgr":"Liam Patel",
+        "cat type":"Physical",
+        "seasonal":"y",
+        "Launched":2011,
+        "CategoryStatus":"Active",
+        "Created":"2021-02-05T21:19:18.000",
+        "Updated":"2021-02-27T00:00:00.000"
+    },
+    {
+        "cat key":8,
+        "cat":null,
+        "mgr":1589,
+        "cat type":"Consumer Tech",
+        "seasonal":"Yes",
+        "Launched":2020,
+        "CategoryStatus":"yes",
+        "Created":"2018-12-17T03:26:02.000",
+        "Updated":"2021-02-27T00:00:00.000"
+    },
+    {
+        "cat key":8,
+        "cat":"   Home Appliances",
+        "mgr":"Ava Thompson",
+        "cat type":"Consumer Tech",
+        "seasonal":"Yes",
+        "Launched":2020,
+        "CategoryStatus":"Active",
+        "Created":"2018-11-20T06:51:32.000",
+        "Updated":"2019-06-04T06:51:32.000"
+    },
+    {
+        "cat key":9,
+        "cat":"Smart Home Devices",
+        "mgr":"Emily Carter",
+        "cat type":"Physical",
+        "seasonal":"No",
+        "Launched":2019,
+        "CategoryStatus":"yes",
+        "Created":"2018-06-07T03:56:23.000",
+        "Updated":"2019-04-06T03:56:23.000"
+    },
+    {
+        "cat key":10,
+        "cat":"Wearable Tech",
+        "mgr":"Sophia= Bennett",
+        "cat type":"Digital",
+        "seasonal":"Yes",
+        "Launched":2015,
+        "CategoryStatus":"Active",
+        "Created":"2018-10-19T16:02:31.000",
+        "Updated":"2019-12-10T16:02:31.000"
+    },
+    {
+        "cat key":11,
+        "cat":"Office Equipment",
+        "mgr":"Ethan Morgan",
+        "cat type":"Physical",
+        "seasonal":"No",
+        "Launched":2016,
+        "CategoryStatus":"Active",
+        "Created":"2019-07-10T22:09:06.000",
+        "Updated":"2021-02-27T00:00:00.000"
+    },
+    {
+        "cat key":12,
+        "cat":"Gaming Accessories",
+        "mgr":"Isabella Wright",
+        "cat type":"Physical",
+        "seasonal":"Yes",
+        "Launched":2017,
+        "CategoryStatus":"Active",
+        "Created":"2018-10-20T06:15:49.000",
+        "Updated":"2019-09-30T06:15:49.000"
+    },
+    {
+        "cat key":12,
+        "cat":"Gaming Accessories",
+        "mgr":"Isabella Wright",
+        "cat type":"Physical",
+        "seasonal":"Yes",
+        "Launched":2017,
+        "CategoryStatus":"Active",
+        "Created":"2020-05-30T02:27:13.000",
+        "Updated":"2020-07-12T02:27:13.000"
+    }
+]
