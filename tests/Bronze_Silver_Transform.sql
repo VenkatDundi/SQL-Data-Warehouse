@@ -75,6 +75,33 @@ select distinct cst_State
 from bronze.crm_Customers
 where cst_State like '%[^a-zA-Z0-9 !"%#$&’’()*+,-./:;<=>?@]%';
 
+SELECT 
+    *,
+    	REPLACE(
+			REPLACE(
+				CAST(cst_City AS VARCHAR(100)) COLLATE SQL_Latin1_General_CP1253_CI_AI, '''', ''), '-', ' ')
+FROM bronze.crm_Customers where cst_Name like '%Melan%';
+
+SELECT 
+    cst_Name,
+    	REPLACE(
+			REPLACE(
+				CAST(cst_Name AS VARCHAR(100)) COLLATE SQL_Latin1_General_CP1253_CI_AI, '''', ''), '-', ' ')
+FROM bronze.crm_Customers;
+
+SELECT 
+    cst_State,
+    	REPLACE(
+			REPLACE(
+				CAST(cst_State AS VARCHAR(100)) COLLATE SQL_Latin1_General_CP1253_CI_AI, '''', ''), '-', ' ')
+FROM bronze.crm_Customers where cst_State like '%[^a-zA-Z0-9 !"%#$&''()*+,-./:;<=>?@]%';
+
+SELECT 
+    cst_City,
+    	REPLACE(
+			REPLACE(
+				CAST(cst_City AS VARCHAR(100)) COLLATE SQL_Latin1_General_CP1253_CI_AI, '''', ''), '-', ' ')
+FROM bronze.crm_Customers where cst_City like '%[^a-zA-Z0-9 !"%#$&''()*+,-./:;<=>?@]%';
 
 
 -- Zip Code check: No Errors

@@ -1,0 +1,11 @@
+﻿Currency Key,Country,Currency Name,ISO Code,Currency Symbol,Active Status,Decimal Digits
+1,United States,US Dollar,USD,$,TRUE,2
+2,Canada,Canadian Dollar,CAD,$,TRUE,2
+3,Australia,Australian Dollar,AUD,$,TRUE,2
+4,European Union,Euro,EUR,€,TRUE,2
+5,United Kingdom,Pound Sterling,GBP,£,TRUE,2
+6,Japan,Japanese Yen,JPY,¥,TRUE,0
+7,India,Indian Rupee,INR,₹,TRUE,2
+8,Switzerland,Swiss Franc,CHF,Fr.,TRUE,2
+9,Sweden,Swedish Krona,SEK,kr,TRUE,2
+10,Norway,Norwegian Krone,NOK,kr,TRUE,2
