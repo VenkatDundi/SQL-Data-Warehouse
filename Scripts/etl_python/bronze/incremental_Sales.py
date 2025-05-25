@@ -28,11 +28,11 @@ def load_sales(Sales_Extract):
         recent_row_key = cursor.fetchone()
         #print(recent_row_key)
 
-        if recent_row_key[0] is None:               # Insert the complete sales data extract
+        if recent_row_key[0] is None:               # Insert the complete sales data extract --- When max(row_key) is None: Initial load
             sales_df = sales_data
 
         else:                                       # Only consider the recent RowKeys --- Incremental Load validation
-            sales_df = sales_data[sales_data['RowKey'] > recent_row_key[0]]
+            sales_df = sales_data[sales_data['sales_RowKey'] > recent_row_key[0]]
 
         chunk_size = 5000                           # Chunk processing
         query_sales = """
@@ -49,22 +49,26 @@ def load_sales(Sales_Extract):
             print("Load Processed Chunk {}".format(int(i/5000)))
         
         connection.commit()
-        print("Commit completed - Sales data ingestion on Incremental Load")
+        print(">>> Commit completed - Sales data ingestion on Incremental Load")
+        return len(sales_df)
     
-    except pyodbc.Error as ex:
-        sqlstate = ex.args[0]
-        print(f"Error connecting to SQL Server: {ex.args}")
+    except Exception as e:
+        print(f"Error while performing the Incremental load with reason: {e}")
+        if connection:
+            connection.rollback()
+        print(f">>> Rollback has been completed due to an error during the Incremental load")
+        raise  # Show full traceback
 
     finally:
         if connection:
             connection.close()
             print("Connection closed")
 
-
-for r,d,f in os.walk(os.getcwd()):
+# *** Handled by Airflow in Docker ***
+""" for r,d,f in os.walk(os.getcwd()):
     for i in f:
         if i.endswith("Sales.csv"):                       # Capture the file path for the Sales data extract file (Incremental Load)
             sales_file = os.path.join(r,i)
 
 
-result_incremental_sales = load_sales(sales_file)
+result_incremental_sales = load_sales(sales_file) """

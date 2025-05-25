@@ -13,12 +13,13 @@ Script Purpose:
 ===============================================================================
 */
 
---Exec silver.load_silver;
+--Exec DataWarehouse.silver.load_silver;
 
 --drop procedure silver.load_silver
 
 CREATE OR ALTER PROCEDURE silver.load_silver AS
 BEGIN
+	SET NOCOUNT ON;
     DECLARE @start_time DATETIME, @end_time DATETIME, @batch_start_time DATETIME, @batch_end_time DATETIME; 
     BEGIN TRY
         SET @batch_start_time = GETDATE();
@@ -309,7 +310,7 @@ BEGIN
 				case when lower(str_Country) like '%can%' then 'Canada'
 					when str_Country like '%itl%' then 'Italy'
 					when str_Country like '%United Kingdom%' or str_Country like '%UK%' then 'United Kingdom'
-					when str_Country like '%United KiStatesngdom%' or str_Country like '%US%' then 'United States'
+					when str_Country like '%United States%' or str_Country like '%US%' then 'United States'
 					else str_Country
 				END as str_Country,
 				case when str_State COLLATE Latin1_General_BIN like '%[^a-zA-Z0-9 !"#$&''()*+,-./:;<=>?@]%' then 

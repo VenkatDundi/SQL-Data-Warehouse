@@ -1,0 +1,34 @@
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Airflow generated folders
+logs/
+config/
+plugins/__pycache__/
+.cfg
+
+# DAG output
+dags/__pycache__/
+dags/*.pyc
+
+# Environment and secrets
+.env
+.env.*
+
+# Docker volumes and temp
+*.log
+*.tmp
+
+# VS Code settings
+.vscode/
+
+# Optional: sensitive scripts
+scripts/utils/db.py

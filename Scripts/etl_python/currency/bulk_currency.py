@@ -1,7 +1,10 @@
 import pyodbc
+import os
+
 from ..utils.db import get_sql_connection
 
-def load_bulk_data(folder_path):
+
+def load_currency(folder_path):
     
     connection = None
 
@@ -11,13 +14,15 @@ def load_bulk_data(folder_path):
         cursor = connection.cursor()
         print(cursor)
         print("Connection to SQL Server successful")
+
         print(folder_path)
-        cursor.execute("""EXEC DataWarehouse.bronze.sp_bulk_insert ?""", folder_path)        # Stored procedure call with folder_path as parameter
+        cursor.execute("""EXEC DataWarehouse.bronze.load_currency ?""", folder_path)        # Stored procedure call with folder_path as parameter
+
         connection.commit()
-        print(">>> Commit completed - Bulk Ingestion from 5 data sources has been completed")
+        print(">>> Commit completed - Bulk Ingestion of Currency has been completed")
 
     except Exception as e:
-        print(f"Error while performing the bulk insert on 5 tables with reason: {e}")
+        print(f"Error while performing the bulk insert currency with reason: {e}")
         if connection:
             connection.rollback()
         print(f">>> Rollback has been completed due to an error during bulk ingestion")

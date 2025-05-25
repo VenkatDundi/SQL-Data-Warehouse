@@ -7,8 +7,7 @@ import pyodbc
 
 from ..utils.db import get_sql_connection
 
-url = "https://venkatdundi.github.io/Web-Scrapping/Github-Pages-Scraping/index.html"            # Github Static Webpage
-
+""" url = "https://venkatdundi.github.io/Web-Scrapping/Github-Pages-Scraping/index.html"    """
 
 def scrape_currencydata(url):
 
@@ -42,62 +41,45 @@ def scrape_currencydata(url):
             df['Currency Symbol'] = df['Currency Symbol'].astype(str)
             #print(df)
             #print(df.info())
-            csv_file = 'CurrencyData.csv'
-            df.to_csv(csv_file, index=False, encoding='utf-8-sig')        # Encoding helps in holding the formatting for currency symbols
-
+            csv_file_path = '/opt/airflow/datasources/CurrencyData.csv'
+            df.to_csv(csv_file_path, index=False, encoding='utf-8-sig')        # Encoding helps in holding the formatting for currency symbols
+            print("Resultant csv generated and saved in path --- /opt/airflow/datasources")
             
-            for r, dirs,file in os.walk(os.getcwd()):
+            return True
+            """ for r, dirs,file in os.walk(os.getcwd()):
                 for f in file:
                     if f == csv_file:
-                        return os.path.join(r, f)
+                        return os.path.join(r, f) """
             
         else:
-            return ("Error due to: {}", status)
+            print("Error due to: {}", status)
+            return False
     
-    except requests.exceptions.RequestException as e:
-        print("Error in data extraction from a Web Page:")
-        print(type(e).__name__, "→", str(e))
+    except Exception as e:
+        print(f"Error while performing data extraction from a Web Page: {e}")
+        raise  # Show full traceback
 
 
 
-def ingest_web_category(web_data):
+def ingest_web_currency(folder_path):
 
     connection = None
     try:
         
         connection = get_sql_connection()          # Establish the connection
         cursor = connection.cursor()
+        cursor.execute("""EXEC DataWarehouse.bronze.load_currency ?""", folder_path)        # Stored procedure call with folder_path as parameter
 
-        web_data = f"'{web_data}'"
-
-
-        print("Connection to SQL Server successful")
-        cursor.execute("TRUNCATE TABLE DataWarehouse.bronze.fin_CurrencyData;")          # Truncate the existing table
-        print("Truncated Table - fin_CurrencyData")
-
-        # Bulk Insert the data extract from web page to the SQL server table
-        bulk_insert_query = f"""BULK INSERT bronze.fin_CurrencyData
-                    FROM {web_data}
-                    WITH (
-                        FORMAT = 'CSV',
-                        FIRSTROW = 2,
-                        FIELDTERMINATOR = ',',
-                        ROWTERMINATOR = '\\n',
-                        CODEPAGE = '65001',
-                        KEEPNULLS
-                    );
-                    """
-        cursor.execute(bulk_insert_query)
         connection.commit()
-        print("Commit completed - Ingestion of web data - category")
+        print(">>> Commit completed - Bulk Ingestion of Currency data has been completed")
     
-    except pyodbc.Error as ex:
-        sqlstate = ex.args[0]
-        print(f"Error connecting to SQL Server: {sqlstate}")
+
     except Exception as e:
+        print(f"Error while performing ingestion on Currency data from web: {e}")
         if connection:
             connection.rollback()
-            print(f"Performed Rollback!!, Error Reason: {e.args[0]}")
+        print(f">>> Rollback has been completed due to an error during Web Scraping data ingestion")
+        raise  # Show full traceback
 
     finally:
         if connection:
@@ -105,11 +87,10 @@ def ingest_web_category(web_data):
             print("Connection closed")
 
 
-
-
-web_data = scrape_currencydata(url)         # complete file path of the generated csv file --- Required for bulk insert to table
+# *** Handled by Airflow in Docker ***
+""" web_data = scrape_currencydata(url)         # complete file path of the generated csv file --- Required for bulk insert to table
 
 if web_data.endswith('CurrencyData.csv'):
     result = ingest_web_category(web_data)
 else:
-    print("Failed to extract data from API")
+    print("Failed to extract data from API") """

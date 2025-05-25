@@ -13,7 +13,7 @@ def load_to_gold():
         cursor = connection.cursor()
         print("Connection to SQL Server successful")
 
-        cursor.execute("""EXEC DataWarehouse.gold.load_gold""")        # Stored procedure call with folder_path as parameter
+        cursor.execute("""EXEC DataWarehouse.gold.load_gold;""")        # Stored procedure call for gold layer
 
         connection.commit()
         print("> Commit completed - Views for Dimensions and Fact have been created in gold layer")
@@ -23,6 +23,9 @@ def load_to_gold():
         if connection:
             connection.rollback()
             print("> Rollback has been completed due to an error during view creation in gold layer")
-    
+        return False
+    return True
 
-result_load_to_gold = load_to_gold()
+# *** Handled by Airflow in Docker ***
+
+""" result_load_to_gold = load_to_gold() """

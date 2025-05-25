@@ -44,3 +44,21 @@
 19. sp_executesql() - For running commands that don’t allow variables directly (e.g., BULK INSERT, SELECT INTO, dynamic table names)
 
 20. We cannot use CREATE VIEW immediately upon a DROP View statement. Another workaround is to use:  EXEC sp_executesql N'CREATE VIEW .....'
+
+21. Windows Authentication to SQL Server doesn't work in Docker containers. connection string with credentials.
+
+22. Airflow current version requires ```pyhton version < 3.12``` [This can be done by creating a venv in project folder with python version < 3.12]
+
+23. Airflow with Docker installation and yaml file configuration
+
+24. Xcom is useful for Cross communication between tasks for sharing the data. But when Airflow tries to push a Pandas DataFrame to XCom, PyArrow fails to serialize it and raises an error. PyArrow requires strict data validations. So, convert the df to a json or csv before passing the file location though Xcom to other task.
+
+25. %40 is the URL-encoded form of @
+
+26. AIRFLOW_CONN_MSSQL_DEFAULT=mssql+pyodbc://airflow_user:pwd@host/db?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
+
+27. Use Task groups to combine related taks with a single name
+
+28. When we change a dag_id, multiple dags will be populated in the Airflow UI. Use "docker compose restart" to refresh the componenets and dags with updated dag id.
+
+29. BULK INSERT does not support inserting into a different database than the one you're connected to when called via sp_executesql in dynamic SQL. [When executed dynamically, SQL Server evaluates BULK INSERT in the context of the current database session].

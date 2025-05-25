@@ -3,7 +3,7 @@ import pyodbc
 from ..utils.db import get_sql_connection
 
 
-def load_to_silver():
+def get_TableRowCount():
 
     connection = None
     try:
@@ -11,20 +11,21 @@ def load_to_silver():
         cursor = connection.cursor()
         print("Connection to SQL Server successful")
 
-        cursor.execute("""EXEC DataWarehouse.silver.load_silver;""")        # Stored procedure call
+        cursor.execute("""EXEC DataWarehouse.bronze.sp_PrintTableRowCounts""")        # Stored procedure call with folder_path as parameter
+
         connection.commit()
-        print(">>> Commit completed - Silver table ingestion has been completed")
+        print(">>> Tables Row count has been retrived")
 
     except pyodbc.Error as e:
-        print("Error while performing the Silver table ingestion with reason: ", e.args)
+        print("Error while performing the table count retrieval with reason: ", e.args)
         if connection:
             connection.rollback()
-            print("> Rollback has been completed due to an error during silver layer ingestion")
+            print("> Rollback has been completed due to an error during table count retrieval")
         return False
     return True
 
     
 # *** Handled by Airflow in Docker ***
 """
-    result_load_silver = load_to_silver()
+    result_table_row_count = get_TableRowCount()
 """
