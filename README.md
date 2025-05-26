@@ -37,7 +37,7 @@ The project simulates real-world enterprise patterns using Slowly Changing Dimen
 
 - Data Flow:
 
-![Data Flow](docs/DataFlow.drawio)
+![Data Flow](docs/DataFlow.drawio.png)
 
 This project involves:
 
@@ -93,6 +93,7 @@ Schedule and manage ETL scripts in the correct order.
 
 Please find below resources:
 
+- **[Reference - Maven Analytics Datasource](https://mavenanalytics.io/data-playground?dataStructure=Multiple%20tables&order=date_added%2Cdesc&search=Global%20Electronics%20Retailer&tags=Retail):** Golbal Electronics Retailer
 - **[Datasets](datasets/):** Access to the project dataset (Json, Web API, HTML Web Page, database table, csv files).
 - **[SQL Server Express](https://www.microsoft.com/en-us/sql-server/sql-server-downloads):** Lightweight server for hosting your SQL database.
 - **[SQL Server Management Studio (SSMS)](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16):** GUI for managing and interacting with databases.
@@ -165,7 +166,7 @@ Please find [docs/DataCatalogue_Gold.md](docs/DataCatalogue_Gold.md) for full ta
 #### Model: 
 `Star Schema`
 
-![Data Model](docs/DataModel.drawio)
+![Data Model](docs/DataModel.drawio.png)
 
 #### Objective
 Develop SQL-based analytics to deliver detailed insights into:
@@ -176,7 +177,7 @@ Develop SQL-based analytics to deliver detailed insights into:
 
 These insights empower stakeholders with key business metrics, enabling strategic decision-making.  
 
-For more details, refer to [docs/requirements.md](docs/requirements.md).
+For more details, refer to [docs/requirements.txt](docs/requirements.txt).
 
 ---
 

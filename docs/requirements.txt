@@ -1,0 +1,17 @@
+# Core ETL libraries
+pandas>=1.5
+requests
+beautifulsoup4
+pyodbc
+unidecode
+
+# JSON parsing (native in Python, but included for completeness if needed in scripts)
+simplejson           # Better precision for numeric JSON if needed
+
+# Airflow 3.0 (pin version and use constraint file at install time)
+apache-airflow==3.0.0
+
+# Optional: Airflow providers (uncomment if using MSSQL, HTTP, etc.)
+# apache-airflow-providers-microsoft-mssql
+# apache-airflow-providers-http
+# apache-airflow-providers-odbc
