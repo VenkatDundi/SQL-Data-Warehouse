@@ -32,4 +32,4 @@ dags/*.pyc
 .vscode/
 
 # Optional: sensitive scripts
-scripts/utils/db.py
+scripts/etl_python/utils/db.py
