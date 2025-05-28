@@ -168,6 +168,13 @@ Please find [docs/DataCatalogue_Gold.md](docs/DataCatalogue_Gold.md) for full ta
 ✅ Airflow 3.0 orchestration with Docker
 
 
+**Slowly Changing Dimensions - Type 2: Customers**
+
+> [!NOTE]  
+> Default start date for Customers table is considered as "2015-04-01". Through implementation of SCD Type-2, we are updating details of customers using a source file ``NewCustomers.csv``, such that the end date is automatically updated with IsActive status to 0. Moreover, a new record is created with updated customer details with new start date and IsActive_Status to 1.
+
+![SCD2](docs/SCD-2.png)
+
 ---
 
 ### BI: Analytics & Reporting (Data Analysis)
