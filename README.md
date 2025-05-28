@@ -82,6 +82,11 @@ Schedule and manage ETL scripts in the correct order.
     - ``AIRFLOW_CONN_MSSQL_DEFAULT`` connection string for SQL Server
     - ``WEB UI`` connection set up - SQL Server user connection, SMTP email connection
 
+**Example Task:** TriggerDagRunOperator
+
+![DAG Run Sequence](docs/DAG_Sequence.jpg)
+
+
 **Example Task:** EmailOperator
 
 ![Email Operator](docs/Email_Template.png)
@@ -112,6 +117,10 @@ Please find below resources:
 - Start airflow with docker compose
 - `Run WEB UI` - http://localhost:8080
 
+
+**Folder Structure:**
+
+![Folder Structure](docs/Folder_Structure.png)
 
    
 > [!NOTE]  

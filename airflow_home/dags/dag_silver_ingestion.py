@@ -3,6 +3,7 @@ from airflow.providers.smtp.operators.smtp import EmailOperator
 from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from datetime import datetime, timedelta
 from time import time
 import sys
@@ -27,7 +28,7 @@ with DAG(
 
     dag_id = "dag_silver_layer",
     default_args=default_args,
-    schedule = "@daily",
+    schedule = None,
     catchup=False
 
 ) as dag:
@@ -101,7 +102,7 @@ with DAG(
                             <tbody>"""
         
         for task_id in dag.task_ids:
-            if task_id in ['generate_html_email', 'send_email', 'get_rows_initial', 'get_rows_final']:             # Skip the details for email trigger
+            if task_id in ['generate_html_email', 'send_email', 'get_rows_initial', 'get_rows_final', 'trigger_quarantine_dag']:             # Skip the details for email trigger
                 continue
             state = ti.xcom_pull(task_ids = task_id, key = 'state') or 'N/A'
             duration = ti.xcom_pull(task_ids = task_id, key = 'duration') or 'N/A'
@@ -172,6 +173,13 @@ with DAG(
         trigger_rule='all_success'
     )
 
+    trigger_quarantine = TriggerDagRunOperator(
+        task_id='trigger_quarantine_dag',
+        trigger_dag_id='dag_quarantine_layer',
+        wait_for_completion=True,
+        poke_interval=60,
+    )
 
 
-    task_tablerows_Initial >> task_load_silver >> task_tablerows_Final >> trigger_email >> send_email
+
+    task_tablerows_Initial >> task_load_silver >> task_tablerows_Final >> trigger_email >> send_email >> trigger_quarantine

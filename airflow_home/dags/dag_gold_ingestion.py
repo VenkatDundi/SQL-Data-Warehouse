@@ -27,7 +27,7 @@ with DAG(
 
     dag_id = "dag_gold_layer",
     default_args=default_args,
-    schedule = "@daily",
+    schedule = None,
     catchup=False
 
 ) as dag:

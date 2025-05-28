@@ -1,9 +1,11 @@
 from airflow import DAG
-from airflow.providers.smtp.operators.smtp import EmailOperator
+from airflow.providers.smtp.operators.smtp import EmailOperator                 # These are installed in docker Environment using Python venv 3.10
 from airflow.operators.python import PythonOperator, ShortCircuitOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.utils.task_group import TaskGroup
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from datetime import datetime, timedelta
+from pendulum import timezone
 from time import time
 import sys
 import pandas as pd
@@ -13,8 +15,8 @@ from pathlib import Path
 # Add scripts path to sys.path - This helps in path detection in docker container
 sys.path.append('/opt/airflow/scripts')
   
-# Import ETL functions from bronze scripts
-from etl_python.bronze.api_subcategory import extract_from_api, ingest_api_subcategory # type: ignore
+# Import ETL functions from bronze scripts      ---> Ignore as the actual file path is set up in Docker volumes
+from etl_python.bronze.api_subcategory import extract_from_api, ingest_api_subcategory # type: ignore           
 from etl_python.bronze.bulk_insert_procedure import load_bulk_data # type: ignore
 from etl_python.bronze.incremental_sales import load_sales # type: ignore
 from etl_python.bronze.scd_customers import slowly_change_dim_customers # type: ignore
@@ -22,7 +24,7 @@ from etl_python.bronze.web_currency import scrape_currencydata, ingest_web_curre
 
 default_args = {
     'owner' : 'Venkat',
-    'start_date' : datetime(2025,5,12),
+    'start_date' : datetime(2025,5,15, tzinfo=timezone("America/Chicago")),         
     'retries' : 1,
     'retry_delay': timedelta(minutes=1)
 }
@@ -32,7 +34,7 @@ with DAG(
 
     dag_id = "dag_bronze_layer",
     default_args=default_args,
-    schedule = "@daily",
+    schedule = "0 6 * * *",     # 06:00 AM UTC ---> 12:00 AM CST
     catchup=False
 
 ) as dag:
@@ -65,7 +67,7 @@ with DAG(
     def task_status_validation(ti, **kwargs):
         start = time()
         status = ti.xcom_pull(task_ids='SubCategory.extract_api', key='status')
-        if status != 200:
+        if status != 200:                                                                   # Validate the status of output
             print(f"API returned non-200 status: {status}")
             ti.xcom_push(key = 'status', value = 'failure')
             return False
@@ -84,7 +86,7 @@ with DAG(
             df.replace({float('nan'): None}, inplace=True)
             ingest_api_subcategory(df)
             # Push to XCom
-            ti.xcom_push(key='task_update', value=f'Subcategory Table - Rows Updated: {len(df)}')
+            ti.xcom_push(key='task_update', value=f'Subcategory Table - Rows Updated: {len(df)}')       # Push update for each task
             ti.xcom_push(key = 'state', value = 'success')
         else:
             ti.xcom_push(key = 'state', value = 'failure')
@@ -102,16 +104,16 @@ with DAG(
         
     
     def task_load_sales(ti, **kwargs):
-        start = time()
-        rows = load_sales("/opt/airflow/datasources/Sales.csv")
+        start = time()  
+        rows = load_sales("/opt/airflow/datasources/Sales.csv")                                                 # Sales.csv file copy from docker volumes path
         ti.xcom_push(key='task_update', value=f'Incremental Load on Sales Table - Rows Updated: {rows}')
-        ti.xcom_push(key = 'state', value = 'success')
+        ti.xcom_push(key = 'state', value = 'success')                                                      
         end = time()
         ti.xcom_push(key = 'duration', value = round((end - start), 4))
 
     def task_slowly_changing_customers(ti, **kwargs):
         start = time()
-        rows = slowly_change_dim_customers("/opt/airflow/datasources/NewCustomers.csv")
+        rows = slowly_change_dim_customers("/opt/airflow/datasources/NewCustomers.csv")                         # NewCustomers.csv file copy from docker volumes path
         ti.xcom_push(key='task_update', value=f'Slowly Changing Dimension on Customers Table - Rows Updated: {rows}')
         ti.xcom_push(key = 'state', value = 'success')
         end = time()
@@ -133,8 +135,8 @@ with DAG(
     def task_scrape_status(ti, **kwargs):
         start = time()
         status = ti.xcom_pull(task_ids='Currency.scrape_web_data', key='resultant')
-        if status != True:
-            print(f"Web Scraping Error")
+        if status != True:                                                                              # validate the status of the scraping result
+            print(f"Web Scraping Error")                                            
             ti.xcom_push(key = 'state', value = 'failure')
             return False
         print("*** Scrape Successful ***")
@@ -170,6 +172,7 @@ with DAG(
         result1 = ti.xcom_pull(task_ids = 'get_rows_initial')
         result2 = ti.xcom_pull(task_ids = 'get_rows_final')
 
+        # Creation of html string to concatenate the required field values along with In-line HTML components
         html = f""" 
             <!DOCTYPE html>
                 <html lang="en">
@@ -193,7 +196,7 @@ with DAG(
                     <table border="1" cellpadding="5" cellspacing="0">
                         <thead><tr><th>Table Info</th></tr></thead><tbody>"""
         
-        for result_set in result1:
+        for result_set in result1:                          # Retruns the table rows before performing the Ingestion
             for row in result_set:
                 html += f"<tr><td>{row}</td></tr>"
         html += "</tbody></table>"
@@ -215,7 +218,7 @@ with DAG(
                             <tbody>"""
         
         for task_id in dag.task_ids:
-            if task_id in ['generate_html_email', 'send_email', 'get_rows_initial', 'get_rows_final']:             # Skip the details for email trigger
+            if task_id in ['generate_html_email', 'send_email', 'get_rows_initial', 'get_rows_final', 'trigger_silver_dag']:             # Skip the details for email trigger
                 continue
             state = ti.xcom_pull(task_ids = task_id, key = 'state') or 'N/A'
             duration = ti.xcom_pull(task_ids = task_id, key = 'duration') or 'N/A'
@@ -238,7 +241,7 @@ with DAG(
                     <table border="1" cellpadding="5" cellspacing="0">
                         <thead><tr><th>Table Info</th></tr></thead><tbody>"""
 
-        for result_set in result2:
+        for result_set in result2:                              # Retruns the table rows after performing the Ingestion
             for row in result_set:
                 html += f"<tr><td>{row}</td></tr>"
         html += "</tbody></table></div></body></html>"
@@ -247,7 +250,7 @@ with DAG(
         print("Email triggered through Airflow SMTP service successfully")
  
 
-    with TaskGroup("SubCategory") as subcategory_group:
+    with TaskGroup("SubCategory") as subcategory_group:             # Tasks Group with 3 sub tasks
 
         task_extract = PythonOperator(
             task_id = 'extract_api',
@@ -284,7 +287,7 @@ with DAG(
         python_callable=task_slowly_changing_customers
     )
 
-    with TaskGroup("Currency") as currency_group:
+    with TaskGroup("Currency") as currency_group:                       # Task group with 3 sub tasks
 
         task_web_scrape = PythonOperator(
             task_id = 'scrape_web_data',
@@ -304,7 +307,7 @@ with DAG(
         task_web_scrape >> task_web_status >> task_web_ingestion
     
 
-    task_tablerows_Initial = SQLExecuteQueryOperator(
+    task_tablerows_Initial = SQLExecuteQueryOperator(                           # Stored procedure call using SSQLExecuteQueryOperatorQL
         
         task_id = 'get_rows_initial',
         conn_id='sql_server',
@@ -323,14 +326,14 @@ with DAG(
     )
 
 
-    trigger_email = PythonOperator(
+    trigger_email = PythonOperator(                                             # Generate Email content to be triggered
 
         task_id = 'generate_html_email',
         python_callable = generate_email_content,
         op_kwargs = {"ds": "{{ds}}"}
     )
 
-    send_email = EmailOperator(
+    send_email = EmailOperator(                                                 # Email Operator
         task_id='send_email',
         to='gnanireddy7@gmail.com',
         subject='Airflow DAG Summary: "{{ dag.dag_id }}" - Successful Run on  {{ ds }}',
@@ -338,4 +341,12 @@ with DAG(
         trigger_rule='all_success'
     )
 
-    [task_tablerows_Initial >> subcategory_group >> task_bulk_load >> task_incr_sales >> task_scd_customers >> currency_group >> task_tablerows_Final >> trigger_email] >> send_email
+    trigger_silver = TriggerDagRunOperator(                                     # To Execute the Dags in sequence
+        task_id='trigger_silver_dag',
+        trigger_dag_id='dag_silver_layer',  # DAG ID in silver
+        wait_for_completion=True,           # Wait until silver DAG finishes
+        poke_interval=60,                   # Check every 60s
+    )
+
+    # Task Dependencies to specify the order of execution for these tasks
+    [task_tablerows_Initial >> subcategory_group >> task_bulk_load >> task_incr_sales >> task_scd_customers >> currency_group >> task_tablerows_Final >> trigger_email] >> send_email >> trigger_silver

@@ -3,6 +3,7 @@ from airflow.providers.smtp.operators.smtp import EmailOperator
 from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from datetime import datetime, timedelta
 import sys
 
@@ -24,7 +25,7 @@ with DAG(
 
     dag_id = "dag_quarantine_layer",
     default_args=default_args,
-    schedule = "@daily",
+    schedule = None,
     catchup=False
 
 ) as dag:
@@ -138,6 +139,13 @@ with DAG(
         do_xcom_push = True
     )
 
+    trigger_gold = TriggerDagRunOperator(
+        task_id='trigger_gold_dag',
+        trigger_dag_id='dag_gold_layer',
+        wait_for_completion=True,
+        poke_interval=60,
+    )
 
 
-    run_quarantine_customers >> run_quarantine_products >> trigger_email >> send_email
+
+    run_quarantine_customers >> run_quarantine_products >> trigger_email >> send_email >> trigger_gold
